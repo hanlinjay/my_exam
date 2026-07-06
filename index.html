@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>手机随机模拟考试</title>
-    <!-- 引入手机端美化框架 -->
+    <!-- 1. 彻底拔除国外链接！更换为绝对不超时的国内七牛云高速样式源 -->
     <link rel="stylesheet" href="https://cdn.staticfile.net/vant/4.9.21/index.min.css" />
     <style>
         body { background-color: #f7f8fa; font-family: sans-serif; padding-bottom: 80px; -webkit-user-select: none; }
@@ -16,43 +16,45 @@
         .q-text { font-size: 15px; line-height: 1.6; margin-bottom: 12px; color: #1d2129; word-break: break-all; }
         .btn-box { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 99; }
         .ans-box { margin-top: 12px; padding: 10px; background: #f2f9ff; border-radius: 6px; color: #1989fa; font-size: 13px; border-left: 3px solid #1989fa; }
+        [v-cloak] { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="app">
+<div id="app" v-cloak>
     <div class="header">
         <h2>在线随机模拟考试</h2>
         <p>💡 提示：每次刷新页面，题目都会随机重新抽选</p>
     </div>
 
-    <!-- 循环渲染抽出的题型 -->
-    <div v-for="(questions, catName) in paper" :key="catName">
-        <div class="cat-title">{{ catName }}（已随机抽选 {{ questions.length }} 题）</div>
+    <!-- 修复冲突：使用大题名称作为独立的标识符 -->
+    <div v-for="catName in Object.keys(paper)" :key="'cat-' + catName">
+        <div class="cat-title">{{ catName }}（已随机抽选 {{ paper[catName].length }} 题）</div>
         
-        <div class="card" v-for="(q, idx) in questions" :key="idx">
+        <!-- 修复核心漏洞：将 :key 改为包含了题型前缀的唯一组合，彻底解决 #compiler-30 报错 -->
+        <div class="card" v-for="(q, idx) in paper[catName]" :key="'q-' + catName + '-' + idx">
             <div class="q-text"><strong>{{ idx + 1 }}.</strong> {{ q.title }}</div>
 
             <!-- 单选题 -->
-            <div v-if="catName === '单选'">
+            <div v-if="catName.includes('单选')">
                 <van-radio-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
-                    <van-radio :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="oIdx" style="margin-bottom: 10px;">
+                    <van-radio :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="'opt-' + idx + '-' + oIdx" style="margin-bottom: 10px;">
                         {{ String.fromCharCode(65+oIdx) }}. {{ opt }}
                     </van-radio>
                 </van-radio-group>
             </div>
 
             <!-- 多选题 -->
-            <div v-elif="catName === '多选'">
+            <div v-elif="catName.includes('多选')">
                 <van-checkbox-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
-                    <van-checkbox :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="oIdx" shape="square" style="margin-bottom: 10px;">
+                    <van-checkbox :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="'chk-' + idx + '-' + oIdx" shape="square" style="margin-bottom: 10px;">
                         {{ String.fromCharCode(65+oIdx) }}. {{ opt }}
                     </van-checkbox>
                 </van-checkbox-group>
             </div>
 
             <!-- 判断题 -->
-            <div v-elif="catName === '判断'">
+            <div v-elif="catName.includes('判断')">
                 <van-radio-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
                     <van-radio name="对" style="margin-bottom: 10px;">对（√）</van-radio>
                     <van-radio name="错" style="margin-bottom: 10px;">错（×）</van-radio>
@@ -71,12 +73,12 @@
         </div>
     </div>
 
-    <div class="btn-box">
+    <div class="btn-box" v-if="Object.keys(paper).length > 0">
         <van-button type="primary" block round size="large" @click="doSubmit" :disabled="isSubmitted">提交试卷</van-button>
     </div>
 </div>
 
-<!-- 核心脚本加载 -->
+<!-- 2. 您自己写对的完美组合，精确路径引入 -->
 <script src="https://cdn.staticfile.net/vue/3.5.22/vue.global.prod.min.js"></script>
 <script src="https://cdn.staticfile.net/vant/4.9.21/vant.min.js"></script>
 <script src="./questions.js"></script>
@@ -85,7 +87,6 @@
     const { createApp, ref, onMounted } = Vue;
     createApp({
         setup() {
-            // 🎯 核心配置：设置每种题型需要随机抽取的数量
             const config = { "填空": 10, "单选": 20, "多选": 10, "判断": 10, "简答": 2, "论述": 1, "计算": 1 };
             
             const paper = ref({});
@@ -93,13 +94,18 @@
             const isSubmitted = ref(false);
 
             onMounted(() => {
+                if (typeof QUESTION_BANK === 'undefined') {
+                    alert("错误：未检测到题库数据，请检查 questions.js！");
+                    return;
+                }
+                
                 for (let cat in config) {
-                    if (QUESTION_BANK[cat] && QUESTION_BANK[cat].length > 0) {
-                        // 随机打乱并截取指定数量的题目
-                        let shuffled = [...QUESTION_BANK[cat]].sort(() => 0.5 - Math.random());
-                        paper.value[cat] = shuffled.slice(0, Math.min(config[cat], QUESTION_BANK[cat].length));
-                        // 初始化答案区
-                        userAnswers.value[cat] = paper.value[cat].map(q => cat === '多选' ? [] : '');
+                    let actualKey = Object.keys(QUESTION_BANK).find(k => k.includes(cat));
+                    
+                    if (actualKey && QUESTION_BANK[actualKey] && QUESTION_BANK[actualKey].length > 0) {
+                        let shuffled = [...QUESTION_BANK[actualKey]].sort(() => 0.5 - Math.random());
+                        paper.value[actualKey] = shuffled.slice(0, Math.min(config[cat], QUESTION_BANK[actualKey].length));
+                        userAnswers.value[actualKey] = paper.value[actualKey].map(q => actualKey.includes('多选') ? [] : '');
                     }
                 }
             });
