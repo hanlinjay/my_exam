@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>手机随机模拟考试</title>
-    <!-- 1. 修复样式文件名：Staticfile 源中的标准格式为 index.css -->
     <link rel="stylesheet" href="https://cdn.staticfile.net/vant/4.9.21/index.min.css" />
     <style>
         body { background-color: #f7f8fa; font-family: sans-serif; padding-bottom: 80px; -webkit-user-select: none; }
@@ -27,15 +26,13 @@
         <p>💡 提示：每次刷新页面，题目都会随机重新抽选</p>
     </div>
 
-    <!-- 顶层大题循环 -->
     <div v-for="catName in Object.keys(paper)" :key="'cat-' + catName">
         <div class="cat-title">{{ catName }}（已随机抽选 {{ paper[catName].length }} 题）</div>
         
-        <!-- 核心卡片循环：重新优化 key 的组合结构 -->
         <div class="card" v-for="(q, idx) in paper[catName]" :key="'card-' + catName + '-' + idx">
             <div class="q-text"><strong>{{ idx + 1 }}.</strong> {{ q.title }}</div>
 
-            <!-- 单选题：将大题名加入 key 组合，确保 100% 唯一 -->
+            <!-- 🎯 以下条件渲染链条极其严格，中间绝无任何杂质 -->
             <div v-if="catName.includes('单选')">
                 <van-radio-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
                     <van-radio :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="'opt-' + catName + '-' + idx + '-' + oIdx" style="margin-bottom: 10px;">
@@ -43,30 +40,23 @@
                     </van-radio>
                 </van-radio-group>
             </div>
-
-            <!-- 多选题：将大题名加入 key 组合，确保 100% 唯一 -->
-            <div v-elif="catName.includes('多选')">
+            <div v-else-if="catName.includes('多选')">
                 <van-checkbox-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
                     <van-checkbox :name="String.fromCharCode(65+oIdx)" v-for="(opt, oIdx) in q.options" :key="'chk-' + catName + '-' + idx + '-' + oIdx" shape="square" style="margin-bottom: 10px;">
                         {{ String.fromCharCode(65+oIdx) }}. {{ opt }}
                     </van-checkbox>
                 </van-checkbox-group>
             </div>
-
-            <!-- 判断题 -->
-            <div v-elif="catName.includes('判断')">
+            <div v-else-if="catName.includes('判断')">
                 <van-radio-group v-model="userAnswers[catName][idx]" :disabled="isSubmitted">
                     <van-radio name="对" style="margin-bottom: 10px;">对（√）</van-radio>
                     <van-radio name="错" style="margin-bottom: 10px;">错（×）</van-radio>
                 </van-radio-group>
             </div>
-
-            <!-- 填空/简答/论述/计算 -->
             <div v-else>
                 <van-field v-model="userAnswers[catName][idx]" rows="2" autosize type="textarea" placeholder="请在此输入您的解答..." border :disabled="isSubmitted"></van-field>
             </div>
 
-            <!-- 提交后高亮显示标准答案 -->
             <div class="ans-box" v-if="isSubmitted && q.answer">
                 <strong>💡 标准参考答案：</strong> {{ q.answer }}
             </div>
@@ -78,7 +68,6 @@
     </div>
 </div>
 
-<!-- 2. 您挑选的完美路径组合 -->
 <script src="https://cdn.staticfile.net/vue/3.5.22/vue.global.prod.min.js"></script>
 <script src="https://cdn.staticfile.net/vant/4.9.21/vant.min.js"></script>
 <script src="./questions.js"></script>
