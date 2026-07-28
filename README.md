@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as 客户端线程 (x6)
@@ -37,3 +38,4 @@ sequenceDiagram
     end
     
     Async->>Async: 继续休眠 10 分钟
+```
