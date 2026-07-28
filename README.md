@@ -12,7 +12,7 @@ sequenceDiagram
     Client->>TIFILE: 提交检测请求
     TIFILE->>Cache: 查询本地缓存 (锁保护)
     Cache-->>TIFILE: 缓存未命中 (Miss)
-    TIFILE->>Queue: 锁定并加入队列 
+    TIFILE->>Queue: 锁定并加入队列 （过滤重复）
     TIFILE->>Client: 通过 Bit AV检测
     
     Note over Async, TICache: —— 异步TI FILE检测，定时 5 秒钟触发 ——
