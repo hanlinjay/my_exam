@@ -20,13 +20,13 @@ sequenceDiagram
     rect rgb(230, 245, 255)
         Note right of Async: 读取队列时加锁，提取完毕立即解锁
         Async->>Queue: 申请队列锁 (Lock)
-        Async->>Queue: 一次性提取最多 20 条任务 (若不足20则全取)
+        Async->>Queue: 一次性提取所有任务 
         Async->>Queue: 释放队列锁 (Unlock)
     end
     
     rect rgb(255, 240, 240)
         Note right of Async: 锁外网络查询 (避免阻塞提交线程)
-        Async->>TICache: 向TI Cache服务器发起查询请求
+        Async->>TICache: 向TI Cache服务器发起查询请求（20条为一组分批查询，不满20查询所有）
         TICache-->>Async: 返回批量查询结果
     end
 
