@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as Client Thread (Multi-threaded)
@@ -37,3 +38,4 @@ sequenceDiagram
     end
     
     Async->>Async: Continue sleeping for 5 seconds
+```
