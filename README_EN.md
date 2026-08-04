@@ -3,10 +3,11 @@ sequenceDiagram
     autonumber
     participant Client as Client Thread (Multi-threaded)
     participant TIFILE as TIFILE Engine
+    participant Cache as Local Cache
     participant Queue as Simple Queue
     participant Async as Background Async Thread (Worker)
     participant TICache as TI-Cache Server
-    participant Cache as Local Cache
+
 
     Note over Client, Queue: —— Submit file for detection, fast response ——
     Client->>TIFILE: Submit detection request
