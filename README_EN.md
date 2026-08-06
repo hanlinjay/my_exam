@@ -38,5 +38,5 @@ sequenceDiagram
         Async->>Cache: Release cache lock (Unlock)
     end
     
-    Async->>Async: Continue sleeping for 5 seconds
+    Async->>Async: Continue sleeping for 3 seconds
 ```
