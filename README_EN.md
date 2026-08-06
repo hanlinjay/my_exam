@@ -16,7 +16,7 @@ sequenceDiagram
     TIFILE->>Queue: Lock and enqueue (Deduplicate)
     TIFILE->>Client: Detect via Bit AV
     
-    Note over Async, TICache: —— Async TI FILE detection, triggered every 5 seconds ——
+    Note over Async, TICache: —— Async TI FILE detection, triggered every 3 seconds ——
     Async->>Async: Timer reached 5 seconds (Wake up)
     rect rgb(230, 245, 255)
         Note right of Async: Lock when reading queue, unlock immediately after extraction
